@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio AI v2 - Kensei Engine</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body { background-color: #0b0f19; color: #e2e8f0; }
+        .cyber-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4 font-sans">
+
+    <div class="w-full max-w-2xl bg-[#1e293b] rounded-2xl p-6 border border-slate-700 shadow-2xl">
+        <h1 class="text-3xl font-extrabold text-center bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-6 tracking-wide">
+            STUDIO AI V2 - KENSEI ENGINE
+        </h1>
+
+        <div class="mb-4">
+            <label class="block text-sm font-semibold text-blue-400 mb-2">🔗 ĐƯỜNG LINK API NGROK:</label>
+            <input type="text" id="apiLink" value="https://emboss-tidiness-unclad.ngrok-free.dev" placeholder="Dán link https://xxx.ngrok-free.dev..." 
+                   class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl focus:outline-none focus:border-blue-500 text-sm tracking-wide text-green-400">
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-semibold text-purple-400 mb-2">📝 Ý TƯỞNG SÁNG TẠO (PROMPT):</label>
+            <textarea id="promptInput" rows="3" placeholder="Nhập mô tả ý tưởng tại đây..." 
+                      class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl focus:outline-none focus:border-purple-500 text-sm resize-none"></textarea>
+        </div>
+
+        <button id="generateBtn" onclick="generateArt()" 
+                class="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 font-bold rounded-xl cursor-pointer hover:from-blue-600 hover:to-purple-700 transition duration-300 transform active:scale-95 tracking-wider shadow-lg">
+            ⚡ KHỞI TẠO TÀI SẢN HÌNH ẢNH
+        </button>
+
+        <div class="mt-8 flex flex-col items-center justify-center border-2 border-dashed border-slate-700 rounded-xl p-4 bg-slate-900 min-h-[350px] relative overflow-hidden">
+            <div id="loadingStatus" class="hidden absolute flex flex-col items-center justify-center bg-slate-900/90 inset-0 z-10">
+                <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-3"></div>
+                <p class="text-sm font-medium tracking-widest text-blue-400 animate-pulse">⏳ ĐANG CHUYỂN HÓA & KẾT XUẤT...</p>
+            </div>
+            
+            <img id="resultImage" src="" alt="Kết quả hình ảnh" class="hidden max-w-full h-auto rounded-lg shadow-md cyber-glow object-contain">
+            <p id="placeholderText" class="text-slate-500 text-sm font-medium">Chưa có tài sản nào được khởi tạo</p>
+        </div>
+    </div>
+
+    <script>
+        async function enrichAndTranslate(text) {
+            const enrichedText = `${text}, high quality, detailed, masterpiece, realistic, cinematic lighting`;
+            
+            try {
+                const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(enrichedText)}&langpair=vi|en`);
+                const data = await res.json();
+                
+                if (data.responseData && data.responseData.translatedText) {
+                    console.log("🔥 Prompt đã nâng cấp:", data.responseData.translatedText);
+                    return data.responseData.translatedText;
+                }
+                return enrichedText;
+            } catch (error) {
+                console.error("Lỗi dịch thuật, đẩy prompt thô:", error);
+                return enrichedText;
+            }
+        }
+
+        async function generateArt() {
+            const apiLink = document.getElementById('apiLink').value.trim();
+            const prompt = document.getElementById('promptInput').value.trim();
+            const loading = document.getElementById('loadingStatus');
+            const resultImg = document.getElementById('resultImage');
+            const placeholder = document.getElementById('placeholderText');
+
+            if (!apiLink || !prompt) {
+                alert("🔴 LỖI: Nhập thiếu Link hoặc Prompt!");
+                return;
+            }
+
+            let cleanApiUrl = apiLink.endsWith('/') ? apiLink.slice(0, -1) : apiLink;
+
+            loading.classList.remove('hidden');
+            resultImg.classList.add('hidden');
+            placeholder.classList.add('hidden');
+
+            const optimizedPrompt = await enrichAndTranslate(prompt);
+            const finalTargetUrl = `${cleanApiUrl}/generate?prompt=${encodeURIComponent(optimizedPrompt)}`;
+
+            resultImg.src = finalTargetUrl;
+
+            resultImg.onload = () => {
+                loading.classList.add('hidden');
+                resultImg.classList.remove('hidden');
+            };
+
+            resultImg.onerror = () => {
+                loading.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                placeholder.innerText = "🔴 LỖI: Không thể kết nối. Kiểm tra lại link Ngrok!";
+                alert("🔴 SẬP MẠCH: Không gọi được tới Server. Kiểm tra lại Colab!");
+            };
+        }
+    </script>
+</body>
+</html>
