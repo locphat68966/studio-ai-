@@ -19,7 +19,7 @@
 
         <div class="mb-4">
             <label class="block text-sm font-semibold text-blue-400 mb-2">🔗 ĐƯỜNG LINK API NGROK:</label>
-            <input type="text" id="apiLink" value="https://emboss-tidiness-unclad.ngrok-free.dev" placeholder="Dán link https://xxx.ngrok-free.dev..." 
+            <input type="text" id="apiLink" placeholder="Dán link https://xxx.ngrok-free.dev..." 
                    class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl focus:outline-none focus:border-blue-500 text-sm tracking-wide text-green-400">
         </div>
 
@@ -47,25 +47,11 @@
 
     <script>
         async function enrichAndTranslate(text) {
-            const enrichedText = `${text}, high quality, detailed, masterpiece, realistic, cinematic lighting`;
-            
-            try {
-                const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(enrichedText)}&langpair=vi|en`);
-                const data = await res.json();
-                
-                if (data.responseData && data.responseData.translatedText) {
-                    console.log("🔥 Prompt đã nâng cấp:", data.responseData.translatedText);
-                    return data.responseData.translatedText;
-                }
-                return enrichedText;
-            } catch (error) {
-                console.error("Lỗi dịch thuật, đẩy prompt thô:", error);
-                return enrichedText;
-            }
+            return `${text}, high quality, detailed, masterpiece, realistic, cinematic lighting`;
         }
 
         async function generateArt() {
-            const apiLink = document.getElementById('apiLink').value.trim();
+            let apiLink = document.getElementById('apiLink').value.trim();
             const prompt = document.getElementById('promptInput').value.trim();
             const loading = document.getElementById('loadingStatus');
             const resultImg = document.getElementById('resultImage');
@@ -76,28 +62,39 @@
                 return;
             }
 
-            let cleanApiUrl = apiLink.endsWith('/') ? apiLink.slice(0, -1) : apiLink;
+            // TỰ ĐỘNG ÉP HTTPS (Khắc phục triệt để lỗi Mixed Content)
+            if (apiLink.startsWith('http://')) {
+                apiLink = apiLink.replace('http://', 'https://');
+            }
 
             loading.classList.remove('hidden');
             resultImg.classList.add('hidden');
             placeholder.classList.add('hidden');
 
             const optimizedPrompt = await enrichAndTranslate(prompt);
+            const cleanApiUrl = apiLink.endsWith('/') ? apiLink.slice(0, -1) : apiLink;
             const finalTargetUrl = `${cleanApiUrl}/generate?prompt=${encodeURIComponent(optimizedPrompt)}`;
 
-            resultImg.src = finalTargetUrl;
+            try {
+                // Fetch với header bảo mật để vượt qua cảnh báo của Ngrok
+                const response = await fetch(finalTargetUrl, {
+                    method: 'GET',
+                    headers: { 'ngrok-skip-browser-warning': 'true' }
+                });
 
-            resultImg.onload = () => {
+                if (!response.ok) throw new Error("Server phản hồi lỗi");
+
+                const imageBlob = await response.blob();
+                resultImg.src = URL.createObjectURL(imageBlob);
+
                 loading.classList.add('hidden');
                 resultImg.classList.remove('hidden');
-            };
-
-            resultImg.onerror = () => {
+            } catch (error) {
                 loading.classList.add('hidden');
                 placeholder.classList.remove('hidden');
-                placeholder.innerText = "🔴 LỖI: Không thể kết nối. Kiểm tra lại link Ngrok!";
-                alert("🔴 SẬP MẠCH: Không gọi được tới Server. Kiểm tra lại Colab!");
-            };
+                placeholder.innerText = "🔴 LỖI: Không thể kết nối. Kiểm tra lại Link Ngrok hoặc Colab chưa bật?";
+                console.error(error);
+            }
         }
     </script>
 </body>
