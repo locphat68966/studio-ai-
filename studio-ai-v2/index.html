@@ -140,7 +140,6 @@
             document.getElementById('settings-menu').classList.toggle('hidden');
         }
 
-        // Sửa lỗi xoay mũi tên: Ép class transform chính xác
         function toggleFolder(folderId) {
             const folder = document.getElementById(folderId);
             const arrow = document.getElementById(`${folderId}-arrow`);
@@ -155,7 +154,6 @@
             }
         }
 
-        // Tự động đồng bộ mã nguồn lên UI ban đầu
         window.addEventListener('DOMContentLoaded', () => {
             syncCodeToTextArea();
         });
@@ -165,7 +163,6 @@
             document.getElementById('code-display').value = "<!DOCTYPE html>\n" + currentCode;
         }
 
-        // Sửa lỗi mất dữ liệu: Khóa giá trị Runtime vào attribute trước khi xuất file
         function downloadCodeFile() {
             const apiInput = document.getElementById('api-link');
             const promptInput = document.getElementById('prompt');
@@ -174,7 +171,6 @@
             if(apiInput) apiInput.setAttribute('value', apiInput.value);
             if(promptInput) promptInput.innerHTML = promptInput.value;
             
-            // Đồng bộ trạng thái thẻ select
             if(styleSelect) {
                 const options = styleSelect.getElementsByTagName('option');
                 for(let opt of options) {
@@ -199,7 +195,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // KẾT NỐI API HANDSHAKE
         async function handleAuth(provider) {
             const apiLink = document.getElementById('api-link').value.trim();
             const statusPanel = document.getElementById('auth-status-panel');
@@ -228,7 +223,6 @@
             }
         }
 
-        // KẾT NỐI RENDER
         async function generateImage() {
             const apiLink = document.getElementById('api-link').value.trim();
             const prompt = document.getElementById('prompt').value.trim();
@@ -259,7 +253,7 @@
                 alert("Thực thi thất bại. Hãy kiểm tra tham số luồng của Backend Colab.");
                 placeholderEl.classList.remove('hidden');
                 console.error(error);
-            } finally {
+            } divide {
                 loadingEl.classList.add('hidden');
             }
         }
